@@ -1,0 +1,17 @@
+---
+- name: Check if LXC with target VMID exists
+  ansible.builtin.command: "pct status {{ ha_vmid }}"
+  register: ct_status
+  changed_when: false
+  failed_when: false
+
+- name: Stop existing Home Assistant LXC
+  ansible.builtin.command: "pct stop {{ ha_vmid }}"
+  when: ct_status.rc == 0
+  failed_when: false
+  changed_when: true
+
+- name: Destroy existing Home Assistant LXC
+  ansible.builtin.command: "pct destroy {{ ha_vmid }} --purge 1"
+  when: ct_status.rc == 0
+  changed_when: true

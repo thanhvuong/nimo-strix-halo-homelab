@@ -1,0 +1,16 @@
+---
+## Home Assistant OS VM settings (recommended baseline)
+ha_vmid: 103
+ha_name: homeassistant
+ha_cores: 2
+ha_memory_mb: 4096
+ha_disk_gb: 32
+ha_storage: nvme2-lvmthin
+ha_bridge: vmbr0
+ha_onboot: true
+
+## HA OS image
+haos_version: "17.1"
+haos_image_url: "https://github.com/home-assistant/operating-system/releases/download/{{ haos_version }}/haos_generic-x86-64-{{ haos_version }}.img.xz"
+haos_image_xz_path: "/var/lib/vz/template/qemu/haos_generic-x86-64-{{ haos_version }}.img.xz"
+haos_image_path: "/var/lib/vz/template/qemu/haos_generic-x86-64-{{ haos_version }}.img"

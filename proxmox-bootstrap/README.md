@@ -4,6 +4,8 @@ Initial Proxmox host configuration for Strix Halo homelab nodes.
 
 ## What it does
 
+- Installs host utility packages:
+  - `btop`
 - Sets GRUB kernel params for large AMD unified memory:
   - `iommu=pt`
   - `amdgpu.gttsize=126976`

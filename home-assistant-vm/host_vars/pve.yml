@@ -1,0 +1,6 @@
+---
+# Host-specific overrides for this Proxmox node
+ha_cores: 4
+ha_memory_mb: 8192
+ha_disk_gb: 64
+ha_storage: nvme2-lvmthin

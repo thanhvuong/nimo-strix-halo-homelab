@@ -1,0 +1,92 @@
+---
+- name: Check if VM already exists
+  ansible.builtin.command: "qm status {{ ha_vmid }}"
+  register: vm_status
+  changed_when: false
+  failed_when: false
+
+- name: Ensure image cache directory exists
+  ansible.builtin.file:
+    path: /var/lib/vz/template/qemu
+    state: directory
+    mode: '0755'
+
+- name: Download Home Assistant OS image
+  ansible.builtin.get_url:
+    url: "{{ haos_image_url }}"
+    dest: "{{ haos_image_xz_path }}"
+    mode: '0644'
+    force: false
+
+- name: Decompress Home Assistant OS image
+  ansible.builtin.command: "xz -dk {{ haos_image_xz_path }}"
+  args:
+    creates: "{{ haos_image_path }}"
+
+- name: Create Home Assistant VM
+  ansible.builtin.command: >
+    qm create {{ ha_vmid }}
+    --name {{ ha_name }}
+    --memory {{ ha_memory_mb }}
+    --cores {{ ha_cores }}
+    --cpu host
+    --machine q35
+    --bios ovmf
+    --ostype l26
+    --scsihw virtio-scsi-single
+    --agent 1
+    --net0 virtio,bridge={{ ha_bridge }}
+    --keyboard en-us
+    --vga std
+    --onboot {{ '1' if ha_onboot else '0' }}
+  when: vm_status.rc != 0
+
+- name: Import Home Assistant disk image
+  ansible.builtin.command: >
+    qm importdisk {{ ha_vmid }} {{ haos_image_path }} {{ ha_storage }}
+  when: vm_status.rc != 0
+
+- name: Attach imported disk and set boot order
+  ansible.builtin.command: >
+    qm set {{ ha_vmid }}
+    --scsi0 {{ ha_storage }}:vm-{{ ha_vmid }}-disk-0,discard=on,ssd=1
+    --boot order=scsi0
+    --bootdisk scsi0
+  when: vm_status.rc != 0
+
+- name: Add EFI disk
+  ansible.builtin.command: >
+    qm set {{ ha_vmid }}
+    --efidisk0 {{ ha_storage }}:1,efitype=4m,pre-enrolled-keys=0
+  when: vm_status.rc != 0
+
+- name: Resize VM disk to requested size
+  ansible.builtin.command: "qm resize {{ ha_vmid }} scsi0 {{ ha_disk_gb }}G"
+  when: vm_status.rc != 0
+
+- name: Ensure VM uses standard VGA console
+  ansible.builtin.command: "qm set {{ ha_vmid }} --vga std"
+  changed_when: true
+
+- name: Remove serial console device if present
+  ansible.builtin.command: "qm set {{ ha_vmid }} --delete serial0"
+  register: serial_delete
+  failed_when: false
+  changed_when: serial_delete.rc == 0
+
+- name: Start Home Assistant VM
+  ansible.builtin.command: "qm start {{ ha_vmid }}"
+  register: vm_start
+  failed_when: false
+  changed_when: vm_start.rc == 0
+
+- name: Show VM status
+  ansible.builtin.command: "qm status {{ ha_vmid }}"
+  register: vm_status_final
+  changed_when: false
+
+- name: Display access info
+  ansible.builtin.debug:
+    msg:
+      - "Home Assistant OS VM {{ ha_vmid }} is {{ vm_status_final.stdout | default('unknown') }}"
+      - "Open Proxmox console for first boot onboarding"

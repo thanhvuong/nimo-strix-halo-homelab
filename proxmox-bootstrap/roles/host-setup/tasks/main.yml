@@ -1,4 +1,11 @@
 ---
+- name: Install host utility packages
+  ansible.builtin.apt:
+    name:
+      - btop
+    state: present
+    update_cache: true
+
 - name: Add Strix Halo kernel boot parameters to GRUB
   ansible.builtin.lineinfile:
     path: /etc/default/grub

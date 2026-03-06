@@ -1,0 +1,7 @@
+---
+- name: Replace Home Assistant Core LXC with Home Assistant OS VM
+  hosts: proxmox
+  become: true
+  roles:
+    - lxc-replace
+    - vm-create
