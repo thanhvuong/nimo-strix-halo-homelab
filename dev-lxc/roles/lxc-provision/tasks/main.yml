@@ -1,0 +1,54 @@
+---
+- name: Update apt cache
+  ansible.builtin.command: "pct exec {{ lxc_vmid }} -- apt-get update -qq"
+  changed_when: false
+
+- name: Install base packages
+  ansible.builtin.command: >
+    pct exec {{ lxc_vmid }} --
+    env DEBIAN_FRONTEND=noninteractive
+    apt-get install -y -qq curl git build-essential unzip openssh-server
+  register: apt_install
+  changed_when: "'newly installed' in apt_install.stdout | default('')"
+
+- name: Add NodeSource repository
+  ansible.builtin.command: >
+    pct exec {{ lxc_vmid }} -- bash -c
+    'curl -fsSL https://deb.nodesource.com/setup_{{ nodejs_major }}.x | bash -'
+  register: nodesource
+  changed_when: "'is already installed' not in nodesource.stdout | default('')"
+
+- name: Install Node.js
+  ansible.builtin.command: >
+    pct exec {{ lxc_vmid }} --
+    env DEBIAN_FRONTEND=noninteractive
+    apt-get install -y -qq nodejs
+  register: node_install
+  changed_when: "'newly installed' in node_install.stdout | default('')"
+
+- name: Install Bun
+  ansible.builtin.command: >
+    pct exec {{ lxc_vmid }} -- bash -c
+    'test -f /root/.bun/bin/bun || curl -fsSL https://bun.sh/install | bash'
+  register: bun_install
+  changed_when: "'already installed' not in bun_install.stdout | default('')"
+
+- name: Add Bun to PATH in bashrc
+  ansible.builtin.command: >
+    pct exec {{ lxc_vmid }} -- bash -c
+    'grep -q ".bun/bin" /root/.bashrc || echo "export PATH=\$HOME/.bun/bin:\$PATH" >> /root/.bashrc'
+  changed_when: false
+
+- name: Verify Bun is installed
+  ansible.builtin.command: >
+    pct exec {{ lxc_vmid }} -- bash -lc 'source /root/.bashrc && bun --version'
+  register: bun_version
+  changed_when: false
+
+- name: Display setup info
+  ansible.builtin.debug:
+    msg:
+      - "Dev container {{ lxc_vmid }} ({{ lxc_hostname }}) is ready."
+      - "Enter with: pct enter {{ lxc_vmid }}"
+      - "SSH: ssh root@<container-ip>"
+      - "Bun: {{ bun_version.stdout | default('unknown') }}"

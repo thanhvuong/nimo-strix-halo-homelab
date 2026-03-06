@@ -8,6 +8,7 @@ This repository is split into two stages:
 
 1. `proxmox-bootstrap/` - one-time host tuning after fresh Proxmox install
 2. `llm-lxc/` - create and provision the vLLM LXC workload
+3. `dev-lxc/` - create and provision a general dev environment LXC (VMID 101)
 
 ## Prerequisites
 
@@ -24,6 +25,7 @@ cd ~/dev/nimo-strix-halo-homelab
 make bootstrap
 reboot
 make lxc
+make dev
 ```
 
 ## Manual Run Order
@@ -35,6 +37,9 @@ reboot
 
 cd ~/dev/nimo-strix-halo-homelab/llm-lxc
 ansible-playbook site.yml
+
+cd ~/dev/nimo-strix-halo-homelab/dev-lxc
+ansible-playbook site.yml
 ```
 
 ## Configuration
@@ -42,3 +47,5 @@ ansible-playbook site.yml
 - Host tuning variables: `proxmox-bootstrap/group_vars/all.yml`
 - LXC defaults: `llm-lxc/group_vars/all.yml`
 - Host overrides: `llm-lxc/host_vars/pve.yml`
+- Dev LXC defaults: `dev-lxc/group_vars/all.yml`
+- Dev LXC host overrides: `dev-lxc/host_vars/pve.yml`

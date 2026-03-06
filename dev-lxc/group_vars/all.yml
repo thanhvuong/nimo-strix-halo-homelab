@@ -1,0 +1,13 @@
+## LXC container settings
+lxc_vmid: 101
+lxc_hostname: dev
+lxc_cores: 8
+lxc_memory_mb: 16384
+lxc_disk_gb: 64
+lxc_storage: local-lvm
+lxc_bridge: vmbr0
+lxc_template: "debian-13-standard_13.1-2_amd64.tar.zst"
+lxc_onboot: true
+
+## Node.js version (major)
+nodejs_major: 24

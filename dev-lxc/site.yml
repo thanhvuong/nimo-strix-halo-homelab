@@ -1,0 +1,7 @@
+---
+- name: Set up TypeScript dev environment on Proxmox
+  hosts: proxmox
+  become: true
+  roles:
+    - lxc-create
+    - lxc-provision
