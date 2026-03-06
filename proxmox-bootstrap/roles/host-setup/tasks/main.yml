@@ -1,0 +1,26 @@
+---
+- name: Add Strix Halo kernel boot parameters to GRUB
+  ansible.builtin.lineinfile:
+    path: /etc/default/grub
+    regexp: '^GRUB_CMDLINE_LINUX_DEFAULT='
+    line: 'GRUB_CMDLINE_LINUX_DEFAULT="quiet {{ kernel_params }}"'
+    backup: true
+  register: grub_updated
+
+- name: Regenerate GRUB config
+  ansible.builtin.command: update-grub
+  when: grub_updated.changed
+
+- name: Check if reboot is needed (kernel params not yet active)
+  ansible.builtin.shell: |
+    grep -q 'amdgpu.gttsize=126976' /proc/cmdline
+  register: kernel_params_active
+  changed_when: false
+  failed_when: false
+
+- name: Warn if reboot is required
+  ansible.builtin.debug:
+    msg: >
+      REBOOT REQUIRED: Kernel boot parameters have been updated but are not yet active.
+      Run 'reboot' on the Proxmox host, then re-run this playbook to continue setup.
+  when: kernel_params_active.rc != 0

@@ -1,0 +1,7 @@
+---
+- name: Create and provision Strix Halo vLLM LXC
+  hosts: proxmox
+  become: true
+  roles:
+    - lxc-create
+    - lxc-provision

@@ -1,0 +1,6 @@
+---
+- name: Bootstrap Proxmox host for Strix Halo homelab
+  hosts: proxmox
+  become: true
+  roles:
+    - host-setup

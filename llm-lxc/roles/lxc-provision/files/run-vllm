@@ -1,0 +1,42 @@
+#!/usr/bin/env bash
+# Run the vLLM container with GPU access
+# Usage: run-vllm [shell|serve]
+#   shell  - drop into a bash shell inside the container
+#   serve  - run the start_vllm.py TUI wizard
+
+CONTAINER_NAME="vllm-server"
+IMAGE="docker.io/kyuz0/vllm-therock-gfx1151:latest"
+HF_CACHE="${HOME}/.cache/huggingface"
+
+mkdir -p "$HF_CACHE"
+
+PODMAN_ARGS=(
+  --name "$CONTAINER_NAME"
+  --device /dev/dri
+  --device /dev/kfd
+  --group-add video
+  --group-add render
+  --security-opt seccomp=unconfined
+  --ipc=host
+  -v "$HF_CACHE:/root/.cache/huggingface"
+  -v /root/amd-strix-halo-vllm-toolboxes:/opt/toolboxes
+  -p 8000:8000
+  -e HSA_OVERRIDE_GFX_VERSION=11.5.1
+  -e LD_PRELOAD=/opt/rocm/lib/librocm_smi64.so
+)
+
+# Remove old container if exists
+podman rm -f "$CONTAINER_NAME" 2>/dev/null
+
+case "${1:-shell}" in
+  shell)
+    exec podman run -it "${PODMAN_ARGS[@]}" "$IMAGE" /bin/bash
+    ;;
+  serve)
+    exec podman run -it "${PODMAN_ARGS[@]}" "$IMAGE" python3 /opt/toolboxes/scripts/start_vllm.py
+    ;;
+  *)
+    echo "Usage: run-vllm [shell|serve]"
+    exit 1
+    ;;
+esac

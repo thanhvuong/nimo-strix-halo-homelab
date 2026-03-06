@@ -1,0 +1,22 @@
+## LXC container settings
+lxc_vmid: 100
+lxc_hostname: vllm
+lxc_cores: 32
+lxc_memory_mb: 114688
+lxc_disk_gb: 128
+lxc_storage: nvme2-lvmthin
+lxc_bridge: vmbr0
+lxc_template: "fedora-42-default_20250428_amd64.tar.xz"
+lxc_template_url: "system"
+
+## GPU device passthrough
+gpu_cgroup_devices:
+  - "c 226:* rwm"   # /dev/dri
+  - "c 234:* rwm"   # /dev/kfd
+
+## Auto-start container on Proxmox boot
+lxc_onboot: true
+
+## vLLM container image
+vllm_image: "docker.io/kyuz0/vllm-therock-gfx1151:latest"
+vllm_repo: "https://github.com/kyuz0/amd-strix-halo-vllm-toolboxes.git"

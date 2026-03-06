@@ -1,0 +1,3 @@
+---
+# Kernel boot parameters for Strix Halo unified memory
+kernel_params: "iommu=pt amdgpu.gttsize=126976 ttm.pages_limit=32505856"

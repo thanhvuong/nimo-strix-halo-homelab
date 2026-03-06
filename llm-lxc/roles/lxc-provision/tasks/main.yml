@@ -1,0 +1,43 @@
+---
+- name: Install podman and git
+  ansible.builtin.command: "pct exec {{ lxc_vmid }} -- dnf install -y podman git"
+  register: dnf_install
+  changed_when: "'Nothing to do' not in dnf_install.stdout"
+
+- name: Clone vLLM toolbox repo
+  ansible.builtin.command: >
+    pct exec {{ lxc_vmid }} -- bash -c
+    'test -d /root/amd-strix-halo-vllm-toolboxes || git clone {{ vllm_repo }}'
+  register: git_clone
+  changed_when: "'Cloning' in git_clone.stderr | default('')"
+
+- name: Copy run-vllm helper script
+  ansible.builtin.command: >
+    pct push {{ lxc_vmid }}
+    {{ role_path }}/files/run-vllm
+    /usr/bin/run-vllm
+    --perms 0755
+  changed_when: true
+
+- name: Pull vLLM container image
+  ansible.builtin.command: "pct exec {{ lxc_vmid }} -- podman pull {{ vllm_image }}"
+  register: podman_pull
+  changed_when: "'Copying' in podman_pull.stderr | default('')"
+  async: 1800
+  poll: 30
+
+- name: Verify GPU devices are accessible
+  ansible.builtin.command: >
+    pct exec {{ lxc_vmid }} -- bash -c
+    'ls /dev/dri/renderD128 /dev/kfd'
+  register: gpu_check
+  changed_when: false
+
+- name: Display setup complete message
+  ansible.builtin.debug:
+    msg:
+      - "LXC container {{ lxc_vmid }} ({{ lxc_hostname }}) is ready."
+      - "Enter with: pct enter {{ lxc_vmid }}"
+      - "Run: run-vllm shell   (interactive shell)"
+      - "Run: run-vllm serve   (TUI model selector)"
+      - "vLLM API will be available on port 8000."

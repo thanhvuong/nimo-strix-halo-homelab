@@ -1,0 +1,53 @@
+---
+- name: Check if LXC container already exists
+  ansible.builtin.command: "pct status {{ lxc_vmid }}"
+  register: lxc_status
+  changed_when: false
+  failed_when: false
+
+- name: Download container template
+  ansible.builtin.command: "pveam download local {{ lxc_template }}"
+  register: template_download
+  changed_when: "'already exists' not in template_download.stderr | default('')"
+  failed_when: template_download.rc != 0 and 'already exists' not in template_download.stderr | default('')
+  when: lxc_status.rc != 0
+
+- name: Create LXC container
+  ansible.builtin.command: >
+    pct create {{ lxc_vmid }}
+    local:vztmpl/{{ lxc_template }}
+    --hostname {{ lxc_hostname }}
+    --cores {{ lxc_cores }}
+    --memory {{ lxc_memory_mb }}
+    --swap 0
+    --storage {{ lxc_storage }}
+    --rootfs {{ lxc_storage }}:{{ lxc_disk_gb }}
+    --net0 name=eth0,bridge={{ lxc_bridge }},ip=dhcp
+    --unprivileged 0
+    --features nesting=1
+    --ostype unmanaged
+    --onboot {{ '1' if lxc_onboot else '0' }}
+  when: lxc_status.rc != 0
+
+- name: Add GPU device passthrough to LXC config
+  ansible.builtin.blockinfile:
+    path: "/etc/pve/lxc/{{ lxc_vmid }}.conf"
+    marker: "# {mark} GPU PASSTHROUGH"
+    block: |
+      lxc.cgroup2.devices.allow: {{ gpu_cgroup_devices | join('\nlxc.cgroup2.devices.allow: ') }}
+      lxc.mount.entry: /dev/dri dev/dri none bind,optional,create=dir
+      lxc.mount.entry: /dev/kfd dev/kfd none bind,optional,create=file
+
+- name: Start LXC container
+  ansible.builtin.command: "pct start {{ lxc_vmid }}"
+  register: lxc_start
+  changed_when: lxc_start.rc == 0
+  failed_when: false
+
+- name: Wait for container to be running
+  ansible.builtin.command: "pct status {{ lxc_vmid }}"
+  register: lxc_running
+  until: "'running' in lxc_running.stdout"
+  retries: 10
+  delay: 2
+  changed_when: false
