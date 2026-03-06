@@ -1,15 +1,16 @@
 # Nimo Strix Halo Homelab
 
-Ansible project for bringing up a Strix Halo Proxmox homelab and deploying a local vLLM LXC.
+Ansible project for bringing up a Strix Halo Proxmox homelab with LLM, dev, ComfyUI, and Home Assistant workloads.
 
 ## Layout
 
-This repository is split into two stages:
+This repository is split into the following stages:
 
 1. `proxmox-bootstrap/` - one-time host tuning after fresh Proxmox install
 2. `llm-lxc/` - create and provision the vLLM LXC workload
-3. `dev-lxc/` - create and provision a general dev environment LXC (VMID 101)
-4. `home-assistant-vm/` - replace CT `103` and deploy Home Assistant OS VM `103`
+3. `dev-lxc/` - create and provision a general dev environment LXC workload
+4. `comfyui-lxc/` - create and provision a ComfyUI LXC workload
+5. `home-assistant-vm/` - deploy Home Assistant OS as a VM (replaces existing CT with the same ID if present)
 
 ## Prerequisites
 
@@ -27,6 +28,7 @@ make bootstrap
 reboot
 make lxc
 make dev
+make comfyui
 make ha
 ```
 
@@ -43,6 +45,9 @@ ansible-playbook site.yml
 cd ~/dev/nimo-strix-halo-homelab/dev-lxc
 ansible-playbook site.yml
 
+cd ~/dev/nimo-strix-halo-homelab/comfyui-lxc
+ansible-playbook site.yml
+
 cd ~/dev/nimo-strix-halo-homelab/home-assistant-vm
 ansible-playbook site.yml
 ```
@@ -50,9 +55,11 @@ ansible-playbook site.yml
 ## Configuration
 
 - Host tuning variables: `proxmox-bootstrap/group_vars/all.yml`
-- LXC defaults: `llm-lxc/group_vars/all.yml`
-- Host overrides: `llm-lxc/host_vars/pve.yml`
+- LLM LXC defaults: `llm-lxc/group_vars/all.yml`
+- LLM LXC host overrides: `llm-lxc/host_vars/pve.yml`
 - Dev LXC defaults: `dev-lxc/group_vars/all.yml`
 - Dev LXC host overrides: `dev-lxc/host_vars/pve.yml`
+- ComfyUI defaults: `comfyui-lxc/group_vars/all.yml`
+- ComfyUI host overrides: `comfyui-lxc/host_vars/pve.yml`
 - Home Assistant defaults: `home-assistant-vm/group_vars/all.yml`
 - Home Assistant host overrides: `home-assistant-vm/host_vars/pve.yml`

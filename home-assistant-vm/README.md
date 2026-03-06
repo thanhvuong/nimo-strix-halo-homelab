@@ -1,14 +1,17 @@
 # Home Assistant OS VM Playbook
 
-Replaces Home Assistant Core LXC `103` with Home Assistant OS VM `103` on Proxmox.
+Deploys Home Assistant OS as Proxmox VM `103`.
+
+If CT `103` exists, this playbook replaces it with a VM.
 
 ## What it does
 
-- Stops and destroys LXC CT `103` if it exists
-- Downloads Home Assistant OS qcow2 image
-- Creates VM `103` with recommended baseline resources
-- Imports disk to configured Proxmox storage
-- Enables boot + starts VM
+- Stops and destroys LXC CT `103` (if present)
+- Downloads the Home Assistant OS `generic-x86-64` image (`.img.xz`)
+- Creates VM `103` with baseline resources
+- Imports the HA OS disk to configured Proxmox storage
+- Configures boot, EFI disk, network, and console defaults
+- Starts the VM
 
 ## Run
 
@@ -16,6 +19,12 @@ Replaces Home Assistant Core LXC `103` with Home Assistant OS VM `103` on Proxmo
 cd ~/dev/nimo-strix-halo-homelab/home-assistant-vm
 ansible-playbook site.yml
 ```
+
+## First Boot
+
+- Open Proxmox UI -> VM `103` -> `Console` (noVNC)
+- Wait for initialization to complete
+- Open Home Assistant at `http://<vm-ip>:8123`
 
 ## Defaults and Overrides
 
@@ -27,4 +36,5 @@ Host-specific overrides: `host_vars/<inventory-host>.yml` (this node: `host_vars
 ```bash
 qm status 103
 qm config 103
+qm showcmd 103 --pretty
 ```
