@@ -1,3 +1,18 @@
 ---
 # Kernel boot parameters for Strix Halo unified memory
 kernel_params: "iommu=pt amdgpu.gttsize=126976 ttm.pages_limit=32505856"
+
+# Optional: manage /etc/network/interfaces from this playbook.
+# Set to true only after reviewing values below.
+network_manage_interfaces: false
+network_reload_after_apply: false
+
+# Primary bridge configuration
+network_primary_iface: nic0
+network_bridge_name: vmbr0
+network_address_cidr: 192.168.1.200/24
+network_gateway: 192.168.1.1
+
+# Additional physical interfaces to keep as manual stanzas
+network_extra_ifaces:
+  - nic1

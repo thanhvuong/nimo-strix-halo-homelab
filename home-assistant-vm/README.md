@@ -4,6 +4,11 @@ Deploys Home Assistant OS as Proxmox VM `103`.
 
 If CT `103` exists, this playbook replaces it with a VM.
 
+## Important
+
+- This playbook is destructive for existing CT `103` and will remove it.
+- Back up/export CT `103` first if you need to preserve data or config.
+
 ## What it does
 
 - Stops and destroys LXC CT `103` (if present)

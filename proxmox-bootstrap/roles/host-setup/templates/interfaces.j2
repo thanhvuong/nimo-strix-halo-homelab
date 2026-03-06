@@ -1,0 +1,18 @@
+auto lo
+iface lo inet loopback
+
+iface {{ network_primary_iface }} inet manual
+
+auto {{ network_bridge_name }}
+iface {{ network_bridge_name }} inet static
+	address {{ network_address_cidr }}
+	gateway {{ network_gateway }}
+	bridge-ports {{ network_primary_iface }}
+	bridge-stp off
+	bridge-fd 0
+{% for iface in network_extra_ifaces %}
+
+iface {{ iface }} inet manual
+{% endfor %}
+
+source /etc/network/interfaces.d/*

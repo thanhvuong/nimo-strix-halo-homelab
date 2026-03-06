@@ -22,6 +22,8 @@ This repository is split into the following stages:
 
 Use either the `Makefile` or direct `ansible-playbook` calls.
 
+Note: `make` is optional. If it is not installed, use the manual `ansible-playbook` commands below.
+
 ```bash
 cd ~/dev/nimo-strix-halo-homelab
 make bootstrap

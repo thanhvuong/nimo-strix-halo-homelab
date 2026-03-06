@@ -7,6 +7,39 @@
     state: present
     update_cache: true
 
+- name: Add terminal compatibility profile for Ghostty
+  ansible.builtin.copy:
+    dest: /etc/profile.d/term-compat.sh
+    mode: "0644"
+    content: |
+      # Map unsupported Ghostty TERM to a widely available terminfo entry.
+      case "${TERM:-}" in
+        xterm-ghostty) export TERM=xterm-256color ;;
+      esac
+
+- name: Warn when network interface management is disabled
+  ansible.builtin.debug:
+    msg: >
+      Network interface management is disabled (network_manage_interfaces=false).
+      Enable it in group_vars/all.yml to render /etc/network/interfaces.
+  when: not network_manage_interfaces | bool
+
+- name: Render /etc/network/interfaces from template
+  ansible.builtin.template:
+    src: interfaces.j2
+    dest: /etc/network/interfaces
+    mode: "0644"
+    backup: true
+  when: network_manage_interfaces | bool
+  register: interfaces_updated
+
+- name: Reload network configuration with ifreload
+  ansible.builtin.command: ifreload -a
+  when:
+    - network_manage_interfaces | bool
+    - network_reload_after_apply | bool
+    - interfaces_updated.changed
+
 - name: Add Strix Halo kernel boot parameters to GRUB
   ansible.builtin.lineinfile:
     path: /etc/default/grub
