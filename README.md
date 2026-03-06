@@ -18,6 +18,12 @@ This repository is split into the following stages:
 - Ansible installed on the runner
 - Inventory host alias `pve` (provided in each subproject `inventory.yml`)
 
+## BIOS setup (manual)
+
+Before running the playbooks, set the **UMA Frame Buffer Size** to the minimum allowed value (e.g. 1GB) in your BIOS. This cannot be automated via Ansible. The kernel boot parameters configured by `proxmox-bootstrap/` handle unified memory allocation — a large static VRAM reservation wastes memory that vLLM and ComfyUI could use.
+
+Path varies by vendor but is typically under **Advanced > AMD CBS > NBIO > GFX Configuration**.
+
 ## Quick Start
 
 Use either the `Makefile` or direct `ansible-playbook` calls.
