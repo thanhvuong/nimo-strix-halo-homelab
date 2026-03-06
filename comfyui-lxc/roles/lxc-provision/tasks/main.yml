@@ -1,0 +1,98 @@
+---
+- name: Update apt cache
+  ansible.builtin.command: "pct exec {{ lxc_vmid }} -- apt-get update -qq"
+  changed_when: false
+
+- name: Install base packages
+  ansible.builtin.command: >
+    pct exec {{ lxc_vmid }} --
+    env DEBIAN_FRONTEND=noninteractive
+    apt-get install -y -qq python3 python3-venv python3-pip git curl
+  register: apt_install
+  changed_when: "'newly installed' in apt_install.stdout | default('')"
+
+- name: Clone ComfyUI
+  ansible.builtin.command: >
+    pct exec {{ lxc_vmid }} -- bash -c
+    'test -d /opt/ComfyUI || git clone https://github.com/comfyanonymous/ComfyUI.git /opt/ComfyUI'
+  register: git_clone
+  changed_when: "'Cloning' in git_clone.stderr | default('')"
+
+- name: Create Python venv
+  ansible.builtin.command: >
+    pct exec {{ lxc_vmid }} -- bash -c
+    'test -f /opt/ComfyUI/venv/bin/python3 || python3 -m venv /opt/ComfyUI/venv'
+  register: venv_create
+  changed_when: "'created' not in venv_create.stdout | default('created')"
+
+- name: Temporarily bump memory for PyTorch install
+  ansible.builtin.command: "pct set {{ lxc_vmid }} --memory {{ lxc_install_memory_mb }}"
+  changed_when: true
+
+- name: Install PyTorch with ROCm support
+  ansible.builtin.command: >
+    pct exec {{ lxc_vmid }} --
+    /opt/ComfyUI/venv/bin/pip install torch torchvision torchaudio
+    --index-url {{ pytorch_rocm_index }}
+  register: pytorch_install
+  changed_when: "'Successfully installed' in pytorch_install.stdout | default('')"
+  async: 1800
+  poll: 30
+
+- name: Install ComfyUI requirements
+  ansible.builtin.command: >
+    pct exec {{ lxc_vmid }} --
+    /opt/ComfyUI/venv/bin/pip install -r /opt/ComfyUI/requirements.txt
+  register: comfyui_deps
+  changed_when: "'Successfully installed' in comfyui_deps.stdout | default('')"
+  async: 600
+  poll: 15
+
+- name: Restore original memory limit
+  ansible.builtin.command: "pct set {{ lxc_vmid }} --memory {{ lxc_memory_mb }}"
+  changed_when: true
+
+- name: Copy run-comfyui helper script
+  ansible.builtin.command: >
+    pct push {{ lxc_vmid }}
+    {{ role_path }}/files/run-comfyui
+    /usr/bin/run-comfyui
+    --perms 0755
+  changed_when: true
+
+- name: Install ComfyUI systemd service
+  ansible.builtin.command: >
+    pct push {{ lxc_vmid }}
+    {{ role_path }}/files/comfyui.service
+    /etc/systemd/system/comfyui.service
+    --perms 0644
+  changed_when: true
+
+- name: Reload systemd in container
+  ansible.builtin.command: "pct exec {{ lxc_vmid }} -- systemctl daemon-reload"
+  changed_when: true
+
+- name: Enable and start ComfyUI service
+  ansible.builtin.command: "pct exec {{ lxc_vmid }} -- systemctl enable --now comfyui"
+  changed_when: true
+
+- name: Verify ComfyUI service is active
+  ansible.builtin.command: "pct exec {{ lxc_vmid }} -- systemctl is-active comfyui"
+  register: comfyui_service_status
+  changed_when: false
+
+- name: Verify GPU devices are accessible
+  ansible.builtin.command: >
+    pct exec {{ lxc_vmid }} -- bash -c
+    'ls /dev/dri/renderD128 /dev/kfd'
+  register: gpu_check
+  changed_when: false
+
+- name: Display setup complete message
+  ansible.builtin.debug:
+    msg:
+      - "ComfyUI container {{ lxc_vmid }} ({{ lxc_hostname }}) is ready."
+      - "Enter with: pct enter {{ lxc_vmid }}"
+      - "Run: run-comfyui"
+      - "Service: {{ comfyui_service_status.stdout | default('unknown') }}"
+      - "Web UI: http://<container-ip>:8188"

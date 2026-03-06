@@ -1,0 +1,21 @@
+## LXC container settings
+lxc_vmid: 102
+lxc_hostname: comfyui
+lxc_cores: 4
+lxc_memory_mb: 8192
+lxc_disk_gb: 64
+lxc_storage: local-lvm
+lxc_bridge: vmbr0
+lxc_template: "debian-13-standard_13.1-2_amd64.tar.zst"
+lxc_onboot: true
+
+## GPU device passthrough
+gpu_cgroup_devices:
+  - "c 226:* rwm"   # /dev/dri
+  - "c 234:* rwm"   # /dev/kfd
+
+## PyTorch ROCm index
+pytorch_rocm_index: "https://download.pytorch.org/whl/rocm6.3"
+
+## Memory bump for PyTorch install (4.9GB download needs RAM headroom)
+lxc_install_memory_mb: 32768

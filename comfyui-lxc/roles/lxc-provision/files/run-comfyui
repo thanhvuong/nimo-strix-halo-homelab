@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+cd /opt/ComfyUI
+HSA_OVERRIDE_GFX_VERSION=11.5.1 /opt/ComfyUI/venv/bin/python3 main.py --listen 0.0.0.0 --port 8188 "$@"

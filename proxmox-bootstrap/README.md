@@ -5,6 +5,7 @@ Initial Proxmox host configuration for Strix Halo homelab nodes.
 ## What it does
 
 - Installs host utility packages:
+  - `ansible` (includes `ansible-playbook`)
   - `btop`
 - Sets GRUB kernel params for large AMD unified memory:
   - `iommu=pt`

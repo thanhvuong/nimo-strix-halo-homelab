@@ -1,0 +1,7 @@
+---
+- name: Set up ComfyUI on Proxmox with AMD GPU passthrough
+  hosts: proxmox
+  become: true
+  roles:
+    - lxc-create
+    - lxc-provision

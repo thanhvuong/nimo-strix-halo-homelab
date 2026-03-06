@@ -2,6 +2,7 @@
 - name: Install host utility packages
   ansible.builtin.apt:
     name:
+      - ansible
       - btop
     state: present
     update_cache: true
