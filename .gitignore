@@ -1,0 +1,19 @@
+# Ansible artifacts
+*.retry
+.ansible/
+
+# Local overrides/secrets
+*.vault
+vault_pass.txt
+.env
+.env.*
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Editor/OS noise
+.DS_Store
+.idea/
+.vscode/
+*~
