@@ -13,11 +13,12 @@ cd ~/dev/nimo-strix-halo-homelab/llm-lxc
 ansible-playbook site.yml
 ```
 
-## Defaults
+## Defaults and Overrides
 
 - VMID: `100`
 - Hostname: `vllm`
-- Disk: `128GB`
-- Storage: `nvme2-lvmthin`
+- Disk: `64GB`
+- Storage: `local-lvm`
 
-Edit values in `group_vars/all.yml`.
+Base defaults live in `group_vars/all.yml`.
+Host-specific overrides live in `host_vars/<inventory-host>.yml` (for this node: `host_vars/pve.yml`).

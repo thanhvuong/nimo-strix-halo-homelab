@@ -1,0 +1,6 @@
+---
+# Host-specific sizing and storage overrides for this Proxmox node.
+lxc_cores: 32
+lxc_memory_mb: 114688
+lxc_disk_gb: 128
+lxc_storage: nvme2-lvmthin

@@ -1,10 +1,10 @@
 ## LXC container settings
 lxc_vmid: 100
 lxc_hostname: vllm
-lxc_cores: 32
-lxc_memory_mb: 114688
-lxc_disk_gb: 128
-lxc_storage: nvme2-lvmthin
+lxc_cores: 8
+lxc_memory_mb: 32768
+lxc_disk_gb: 64
+lxc_storage: local-lvm
 lxc_bridge: vmbr0
 lxc_template: "fedora-42-default_20250428_amd64.tar.xz"
 lxc_template_url: "system"
