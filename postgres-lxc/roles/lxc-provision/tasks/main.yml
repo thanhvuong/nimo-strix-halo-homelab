@@ -1,0 +1,73 @@
+---
+- name: Update apt cache
+  ansible.builtin.command: "pct exec {{ lxc_vmid }} -- apt-get update -qq"
+  changed_when: false
+
+- name: Install PostgreSQL and pgvector packages
+  ansible.builtin.command: >
+    pct exec {{ lxc_vmid }} --
+    env DEBIAN_FRONTEND=noninteractive
+    apt-get install -y -qq
+    postgresql-{{ postgres_version }}
+    postgresql-client-{{ postgres_version }}
+    postgresql-{{ postgres_version }}-pgvector
+  register: pg_install
+  changed_when: "'newly installed' in pg_install.stdout | default('')"
+
+- name: Ensure PostgreSQL service is enabled and running
+  ansible.builtin.command: "pct exec {{ lxc_vmid }} -- systemctl enable --now postgresql"
+  changed_when: true
+
+- name: Configure PostgreSQL listen_addresses
+  ansible.builtin.command: >
+    pct exec {{ lxc_vmid }} -- bash -lc
+    "grep -q \"^listen_addresses = '{{ postgres_listen_addresses }}'\" /etc/postgresql/{{ postgres_version }}/main/postgresql.conf || sed -i \"s/^#\\?listen_addresses.*/listen_addresses = '{{ postgres_listen_addresses }}'/\" /etc/postgresql/{{ postgres_version }}/main/postgresql.conf"
+  changed_when: true
+
+- name: Ensure pg_hba allows LAN password auth
+  ansible.builtin.command: >
+    pct exec {{ lxc_vmid }} -- bash -lc
+    "grep -q \"^host\\s\+all\\s\+all\\s\+{{ postgres_allowed_cidr }}\\s\+scram-sha-256\" /etc/postgresql/{{ postgres_version }}/main/pg_hba.conf || echo \"host all all {{ postgres_allowed_cidr }} scram-sha-256\" >> /etc/postgresql/{{ postgres_version }}/main/pg_hba.conf"
+  changed_when: true
+
+- name: Restart PostgreSQL after config changes
+  ansible.builtin.command: "pct exec {{ lxc_vmid }} -- systemctl restart postgresql"
+  changed_when: true
+
+- name: Ensure PostgreSQL role exists
+  ansible.builtin.command: >
+    pct exec {{ lxc_vmid }} -- bash -lc
+    "su - postgres -c \"psql -tAc \\\"SELECT 1 FROM pg_roles WHERE rolname='{{ postgres_user }}'\\\"\" | grep -q 1 || su - postgres -c \"psql -c \\\"CREATE ROLE {{ postgres_user }} LOGIN PASSWORD '{{ postgres_password }}';\\\"\""
+  changed_when: true
+
+- name: Ensure PostgreSQL database exists
+  ansible.builtin.command: >
+    pct exec {{ lxc_vmid }} -- bash -lc
+    "su - postgres -c \"psql -tAc \\\"SELECT 1 FROM pg_database WHERE datname='{{ postgres_db }}'\\\"\" | grep -q 1 || su - postgres -c \"createdb -O {{ postgres_user }} {{ postgres_db }}\""
+  changed_when: true
+
+- name: Ensure role password is set
+  ansible.builtin.command: >
+    pct exec {{ lxc_vmid }} -- bash -lc
+    "su - postgres -c \"psql -c \\\"ALTER ROLE {{ postgres_user }} WITH PASSWORD '{{ postgres_password }}';\\\"\""
+  changed_when: true
+
+- name: Enable pgvector extension in target database
+  ansible.builtin.command: >
+    pct exec {{ lxc_vmid }} -- bash -lc
+    "su - postgres -c \"psql -d {{ postgres_db }} -c \\\"CREATE EXTENSION IF NOT EXISTS vector;\\\"\""
+  changed_when: true
+
+- name: Verify pgvector extension is installed
+  ansible.builtin.command: >
+    pct exec {{ lxc_vmid }} -- bash -lc
+    "su - postgres -c \"psql -d {{ postgres_db }} -tAc \\\"SELECT extname FROM pg_extension WHERE extname='vector';\\\"\""
+  register: vector_check
+  changed_when: false
+
+- name: Display setup complete message
+  ansible.builtin.debug:
+    msg:
+      - "PostgreSQL container {{ lxc_vmid }} ({{ lxc_hostname }}) is ready."
+      - "Database: {{ postgres_db }} | User: {{ postgres_user }}"
+      - "pgvector extension: {{ vector_check.stdout | trim }}"

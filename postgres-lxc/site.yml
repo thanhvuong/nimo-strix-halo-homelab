@@ -1,0 +1,7 @@
+---
+- name: Set up PostgreSQL + pgvector LXC on Proxmox
+  hosts: proxmox
+  become: true
+  roles:
+    - lxc-create
+    - lxc-provision

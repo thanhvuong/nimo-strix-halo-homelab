@@ -34,4 +34,5 @@ jobs:
             proxmox-bootstrap/site.yml \
             llm-lxc/site.yml \
             dev-lxc/site.yml \
+            postgres-lxc/site.yml \
             home-assistant-vm/site.yml

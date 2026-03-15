@@ -1,6 +1,6 @@
 SHELL := /bin/bash
 
-.PHONY: help bootstrap lxc dev comfyui ha all
+.PHONY: help bootstrap lxc dev comfyui postgres ha all
 
 help:
 	@echo "Targets:"
@@ -8,8 +8,9 @@ help:
 	@echo "  make lxc        - Run LXC create/provision playbook"
 	@echo "  make dev        - Run dev environment LXC playbook"
 	@echo "  make comfyui    - Run ComfyUI LXC playbook"
+	@echo "  make postgres   - Run PostgreSQL + pgvector LXC playbook"
 	@echo "  make ha         - Replace CT 103 with Home Assistant OS VM playbook"
-	@echo "  make all        - Run bootstrap then lxc, dev, comfyui, and ha"
+	@echo "  make all        - Run bootstrap then lxc, dev, comfyui, postgres, and ha"
 
 bootstrap:
 	cd proxmox-bootstrap && ansible-playbook site.yml
@@ -23,7 +24,10 @@ dev:
 comfyui:
 	cd comfyui-lxc && ansible-playbook site.yml
 
+postgres:
+	cd postgres-lxc && ansible-playbook site.yml
+
 ha:
 	cd home-assistant-vm && ansible-playbook site.yml
 
-all: bootstrap lxc dev comfyui ha
+all: bootstrap lxc dev comfyui postgres ha

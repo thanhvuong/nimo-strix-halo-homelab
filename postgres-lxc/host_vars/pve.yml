@@ -1,0 +1,3 @@
+---
+# Host-specific overrides for this Proxmox node
+lxc_storage: nvme2-lvmthin

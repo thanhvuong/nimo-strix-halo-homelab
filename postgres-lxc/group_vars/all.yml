@@ -1,0 +1,19 @@
+---
+## LXC container settings
+lxc_vmid: 104
+lxc_hostname: postgres
+lxc_cores: 4
+lxc_memory_mb: 8192
+lxc_disk_gb: 64
+lxc_storage: local-lvm
+lxc_bridge: vmbr0
+lxc_template: "debian-13-standard_13.1-2_amd64.tar.zst"
+lxc_onboot: true
+
+## PostgreSQL settings
+postgres_version: 17
+postgres_db: app
+postgres_user: app
+postgres_password: "postgres"
+postgres_listen_addresses: "*"
+postgres_allowed_cidr: "192.168.1.0/24"

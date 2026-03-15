@@ -10,7 +10,8 @@ This repository is split into the following stages:
 2. `llm-lxc/` - create and provision the vLLM LXC workload
 3. `dev-lxc/` - create and provision a general dev environment LXC workload
 4. `comfyui-lxc/` - create and provision a ComfyUI LXC workload
-5. `home-assistant-vm/` - deploy Home Assistant OS as a VM (replaces existing CT with the same ID if present)
+5. `postgres-lxc/` - create and provision a PostgreSQL + pgvector LXC workload
+6. `home-assistant-vm/` - deploy Home Assistant OS as a VM (replaces existing CT with the same ID if present)
 
 ## Prerequisites
 
@@ -37,6 +38,7 @@ reboot
 make lxc
 make dev
 make comfyui
+make postgres
 make ha
 ```
 
@@ -56,6 +58,9 @@ ansible-playbook site.yml
 cd ~/dev/nimo-strix-halo-homelab/comfyui-lxc
 ansible-playbook site.yml
 
+cd ~/dev/nimo-strix-halo-homelab/postgres-lxc
+ansible-playbook site.yml
+
 cd ~/dev/nimo-strix-halo-homelab/home-assistant-vm
 ansible-playbook site.yml
 ```
@@ -69,5 +74,7 @@ ansible-playbook site.yml
 - Dev LXC host overrides: `dev-lxc/host_vars/pve.yml`
 - ComfyUI defaults: `comfyui-lxc/group_vars/all.yml`
 - ComfyUI host overrides: `comfyui-lxc/host_vars/pve.yml`
+- PostgreSQL defaults: `postgres-lxc/group_vars/all.yml`
+- PostgreSQL host overrides: `postgres-lxc/host_vars/pve.yml`
 - Home Assistant defaults: `home-assistant-vm/group_vars/all.yml`
 - Home Assistant host overrides: `home-assistant-vm/host_vars/pve.yml`
