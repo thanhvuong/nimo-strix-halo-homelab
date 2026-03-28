@@ -1,8 +1,21 @@
 ---
-- name: Install podman and git
-  ansible.builtin.command: "pct exec {{ lxc_vmid }} -- dnf install -y podman git"
+- name: Install required packages
+  ansible.builtin.command: "pct exec {{ lxc_vmid }} -- dnf install -y podman git openssh-server"
   register: dnf_install
   changed_when: "'Nothing to do' not in dnf_install.stdout"
+
+- name: Enable and start sshd
+  ansible.builtin.command: >
+    pct exec {{ lxc_vmid }} -- bash -c
+    'if systemctl is-enabled sshd >/dev/null 2>&1 &&
+    systemctl is-active sshd >/dev/null 2>&1; then
+      echo unchanged;
+    else
+      systemctl enable --now sshd &&
+      echo changed;
+    fi'
+  register: sshd_enable
+  changed_when: "'changed' in sshd_enable.stdout"
 
 - name: Clone vLLM toolbox repo
   ansible.builtin.command: >
